@@ -9,7 +9,7 @@ import random
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=str, default='0')
 args = parser.parse_args()
-# on tensorflow r0.12
+# on tensorflow
 start_time = time.time()
 img_number = 4  # 5
 batch_size = 64
@@ -21,7 +21,7 @@ img_0 = tf.placeholder(tf.float32, shape=[None, 227, 227, 3])
 label = tf.placeholder(tf.float32, shape=[1, None])
 keep_prob = tf.placeholder(tf.float32)
 # load the pretrained Alexnet
-net_data = np.load("bvlc_alexnet.npy").item()
+net_data = np.load("bvlc_alexnet.npy",encoding='latin1').item()
 
 regularizer = tf.contrib.layers.l2_regularizer(scale=0.1)
 
@@ -167,7 +167,7 @@ def run_test(sess, dataset, epoch):
 	test_batch = dataset.test_batch(test_batch_size, 1)
 	test_mean_distance = sess.run(mean_distance, feed_dict={img_0: test_batch[0][0], label: test_batch[1],
 	                                                        keep_prob: 1}) / test_batch_size
-	print ">>>>>>>>test_mean_distance:%f" % test_mean_distance
+	print(">>>>>>>>>>>>>>>>>>>>>>>>test_mean_distance:%f" % test_mean_distance)
 	fp = open('log_bmi_02_26.txt', 'a')
 	fp.write("epoch:%d, test_mean_distance:%f \n\n" % (epoch, test_mean_distance))
 	fp.close()
@@ -197,22 +197,22 @@ def run_train(sess, train_step, datasetname, attributes_num):
 		next_batch, epoch_end = dataset.next_batch(batch_size, 1)
 		train_step.run(feed_dict={img_0: next_batch[0][0], label: next_batch[1], keep_prob: 0.5})
 		if step % 100 == 0:
-			print "epoch: %d, step: %d, loss: %f" % (
-			epoch, step, sess.run(loss, feed_dict={img_0: next_batch[0][0], label: next_batch[1], keep_prob: 1}))
+			print("epoch: %d, step: %d, loss: %f" % (
+			epoch, step, sess.run(loss, feed_dict={img_0: next_batch[0][0], label: next_batch[1], keep_prob: 1})))
 
 			#      print "batch_label",next_batch[0]
-			print "mean_distance:%f" % (sess.run(mean_distance, feed_dict={img_0: next_batch[0][0], label: next_batch[1],
-			                                                         keep_prob: 1}) / batch_size)
+			print("mean_distance:%f" % (sess.run(mean_distance, feed_dict={img_0: next_batch[0][0], label: next_batch[1],
+			                                                         keep_prob: 1}) / batch_size))
 
-			print "reg_term:%f" % (
-				sess.run(reg_term, feed_dict={img_0: next_batch[0][0], label: next_batch[1], keep_prob: 1}))
+			print("reg_term:%f" % (
+				sess.run(reg_term, feed_dict={img_0: next_batch[0][0], label: next_batch[1], keep_prob: 1})))
 
 
 		step += 1
 		if epoch_end == 1:
 			if epoch % 5 == 0:
 				run_test(sess, dataset, epoch)
-			#      saver.save(sess, './saved_model_realative_mpnn/relative', global_step = epoch)
+				saver.save(sess, './poison_model/model.ckpt')
 			epoch = epoch + 1
 			step = 0
 
@@ -248,6 +248,8 @@ with tf.device('/gpu:' + args.gpu):
 ### main func ###
 with tf.Session(config=config) as sess:
 	sess.run(tf.global_variables_initializer())
+### use this saver.restore to restore the model
+	saver.restore(sess, './poison_model/model.ckpt')
 	run_train(sess, train_step, 'OSR', i)
 
 	# summary writer
@@ -256,4 +258,4 @@ with tf.Session(config=config) as sess:
 #    summaries = tf.summary.merge_all()
 
 end_time = time.time()
-print 'training complete'
+print('training complete')
