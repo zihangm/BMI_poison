@@ -210,7 +210,7 @@ def run_train(sess, train_step, datasetname, attributes_num):
 
 		step += 1
 		if epoch_end == 1:
-			if epoch % 5 == 0:
+			if epoch % 2 == 0:
 				run_test(sess, dataset, epoch)
 				saver.save(sess, './poison_model/model.ckpt')
 			epoch = epoch + 1
@@ -237,7 +237,7 @@ with tf.device('/gpu:' + args.gpu):
 	# add regularization
 	reg_variables = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
 	reg_term = tf.contrib.layers.apply_regularization(regularizer, reg_variables)
-	loss = loss + reg_term
+	#loss = loss + reg_term
 	# train step and configuration
 	train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 	saver = tf.train.Saver()

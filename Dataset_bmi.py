@@ -4,8 +4,10 @@ import scipy.misc
 import random
 import pickle 
 import pandas as pd
+import copy
 
-f = open('./Data/table_validation_final.pkl','rb')
+
+f = open('./BMI_data/Data/table_validation_final.pkl','rb')
 df = pd.read_pickle(f)
 global_ave_num = 1000
 trainsize = 7000
@@ -16,7 +18,7 @@ class reader:
     self.dataset = []
     self.trainset = []
     self.testset = []
-    self.imgdir = './Data/data_UW/'
+    self.imgdir = './BMI_data/Data/data_UW/'
     self.batch_pointer = 0
     self.test_pointer = 0
     self.global_mean =  self.get_global_mean()
@@ -28,16 +30,21 @@ class reader:
     for i in range(global_ave_num): # for now, just use mean of first 1000 
       img = scipy.misc.imresize(scipy.misc.imread(self.imgdir+img_name_list[i]), [256,256])
       img_list.append(img)
-    global_mean = np.mean(np.array(img_list))
+    global_mean = np.mean(np.array(img_list),axis=(0,1,2))
     return global_mean
 
   def read_img(self):
     for img_name in os.listdir(self.imgdir):
-      img = scipy.misc.imresize(scipy.misc.imread(self.imgdir+img_name), [256,256])
-      img = img - np.float32(self.global_mean)
-      img[:,:,2], img[:,:,0] = img[:,:,0], img[:,:,2]
+      img = np.float32(scipy.misc.imresize(scipy.misc.imread(self.imgdir+img_name), [256,256]))
+      img[:,:,0] = img[:,:,0] - self.global_mean[0]
+      img[:,:,2] = img[:,:,1] - self.global_mean[1]
+      img[:,:,2] = img[:,:,2] - self.global_mean[2]
+      tmp0 = copy.deepcopy(img[:,:,0])
+      tmp2 = copy.deepcopy(img[:,:,2])
+      img[:,:,0] = tmp2
+      img[:,:,2] = tmp0
       self.dataset.append([img, img_name])
-    random.shuffle(self.dataset)
+    #random.shuffle(self.dataset)
     self.trainset = self.dataset[0:trainsize]
     self.testset = self.dataset[trainsize:]
     for i in range(9045):
